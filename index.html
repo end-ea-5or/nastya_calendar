@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Календарь Насти на 2027</title>
+  <style>
+    :root {
+      --work-bg: #f8d7d5;
+      /* чуть красноватый */
+      --work-border: #df8f89;
+      --work-text: #8a2b25;
+      --off-bg: #d9efdc;
+      /* чуть зеленоватый */
+      --off-border: #6fb17a;
+      --off-text: #256b34;
+      --page-bg: #d4dbe2;
+      --card-bg: #ffffff;
+      --ink: #263238;
+      --muted: #7b8794;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--page-bg);
+      color: var(--ink);
+      padding: 24px 16px 48px;
+    }
+
+    header {
+      max-width: 1180px;
+      margin: 0 auto 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 0 0 6px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: .95rem;
+      margin: 0;
+    }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      flex-wrap: wrap;
+      margin: 18px 0 4px;
+      font-size: .9rem;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .swatch.work {
+      background: var(--work-bg);
+      border: 1px solid var(--work-border);
+    }
+
+    .swatch.off {
+      background: var(--off-bg);
+      border: 1px solid var(--off-border);
+    }
+
+    .months {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+    }
+
+    .month {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 14px 12px 12px;
+      box-shadow: 0 1px 3px rgba(16, 24, 40, .08), 0 1px 2px rgba(16, 24, 40, .04);
+      border: 1px solid #e6eaef;
+    }
+
+    .month h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      text-align: center;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+
+    .dow {
+      font-size: .68rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 2px 0 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+
+    .day {
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      font-size: .8rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+
+    .day.work {
+      background: var(--work-bg);
+      border-color: var(--work-border);
+      color: var(--work-text);
+    }
+
+    .day.off {
+      background: var(--off-bg);
+      border-color: var(--off-border);
+      color: var(--off-text);
+    }
+
+    .day.empty {
+      background: transparent;
+      border-color: transparent;
+    }
+
+    .day.today {
+      outline: 2px solid #3b82f6;
+      outline-offset: 1px;
+    }
+
+    @media (max-width: 420px) {
+      h1 {
+        font-size: 1.3rem;
+      }
+
+      .months {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      }
+    }
+
+    @media (max-width:560px) {
+      .grid {
+        gap: 8px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      h2 {
+        font-size: 1.3rem !important;
+      }
+
+      .dow {
+        font-size: 1rem;
+      }
+
+      .day {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Календарь Насти на 2027</h1>
+    <div class="legend">
+      <span><i class="swatch work"></i> рабочие дни</span>
+      <span><i class="swatch off"></i> выходные дни</span>
+    </div>
+  </header>
+
+  <main class="months" id="months"></main>
+
+  <script>
+    (function () {
+      // Опорная точка: 31.12.2026 — рабочий день (индекс 0 в цикле)
+      // Цикл: 0,1 — работа; 2,3 — выходные; повтор.
+      const ANCHOR = new Date(2026, 11, 31); // 31 декабря 2026, локальное время
+
+      const MONTHS = [
+        "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+      ];
+      const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+      const DAY_MS = 24 * 60 * 60 * 1000;
+
+      // Возвращает 'work' или 'off' для произвольной даты
+      function shiftType(date) {
+        // Приводим обе даты к полуночи локального времени
+        const a = Date.UTC(ANCHOR.getFullYear(), ANCHOR.getMonth(), ANCHOR.getDate());
+        const d = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+        const diffDays = Math.round((d - a) / DAY_MS);
+        // Корректный остаток для отрицательных значений
+        const idx = ((diffDays % 4) + 4) % 4;
+        return (idx === 0 || idx === 1) ? 'work' : 'off';
+      }
+
+      function isSameDay(a, b) {
+        return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+      }
+
+      const today = new Date();
+      const container = document.getElementById('months');
+
+      for (let m = 0; m < 12; m++) {
+        const monthEl = document.createElement('section');
+        monthEl.className = 'month';
+
+        const title = document.createElement('h2');
+        title.textContent = MONTHS[m] + ' 2027';
+        monthEl.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+
+        // Заголовки дней недели (неделя с понедельника)
+        for (const d of DOW) {
+          const el = document.createElement('div');
+          el.className = 'dow';
+          el.textContent = d;
+          grid.appendChild(el);
+        }
+
+        const first = new Date(2027, m, 1);
+        const daysInMonth = new Date(2027, m + 1, 0).getDate();
+
+        // Сдвиг: 0 = понедельник
+        let lead = (first.getDay() + 6) % 7;
+        for (let i = 0; i < lead; i++) {
+          const el = document.createElement('div');
+          el.className = 'day empty';
+          grid.appendChild(el);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const cur = new Date(2027, m, day);
+          const type = shiftType(cur);
+          const el = document.createElement('div');
+          el.className = 'day ' + type;
+          el.textContent = day;
+          el.title = day + ' ' + MONTHS[m] + ' 2027 — ' + (type === 'work' ? 'рабочий день' : 'выходной день');
+          if (isSameDay(cur, today)) el.classList.add('today');
+          grid.appendChild(el);
+        }
+
+        monthEl.appendChild(grid);
+        container.appendChild(monthEl);
+      }
+    })();
+  </script>
+
+</body>
+
+</html>
